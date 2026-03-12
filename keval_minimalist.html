@@ -394,7 +394,7 @@ footer p{font-family:'Space Grotesk',sans-serif;font-size:.58rem;letter-spacing:
         <h2 class="s-title">Let's Build<br>Something</h2>
         <p>Whether you have a project in mind or just want to say hello — I'd love to hear from you.</p>
         <div class="clinks">
-          <a href="mailto:hello@kevalamin.com" class="clink">Email</a>
+          <a href="/cdn-cgi/l/email-protection#d6beb3babab996bdb3a0b7bab7bbbfb8f8b5b9bb" class="clink">Email</a>
           <a href="#" class="clink">LinkedIn</a>
           <a href="#" class="clink">GitHub</a>
           <a href="#" class="clink">Twitter</a>
@@ -409,7 +409,7 @@ footer p{font-family:'Space Grotesk',sans-serif;font-size:.58rem;letter-spacing:
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ═══════════════════════════════════════════════════════════
 //  HYPER-REALISTIC 3D CARD ENGINE — full Canvas2D renderer
 //  Each card is drawn with:
@@ -829,12 +829,18 @@ function updateFibCard(card){
   card.ry += card.vry;
 }
 
-// ─── HERO CARDS (K♥ and A♥) ─────────────────────────────────
-// They fly out from deep z, slow to a stop close to viewer — BIG
+// ─── HERO CARDS (K♥ and A♥) ──────────────────────────────────
 let heroL = null, heroR = null;
 
-// Hero cards use a larger scale multiplier
-const HERO_SCALE = 5.5; // much bigger — fills the screen dramatically
+const HERO_SCALE = 5.5;
+
+// Orbit state — driven by updateOrbit() each render frame
+let orbitAngle   = Math.PI;  // K starts left, A opposite
+let orbitSpeed   = 0;        // rad/frame, ramps up
+let orbitRadius  = 0;        // set when orbit starts
+let orbitActive  = false;
+let orbitCollapse = false;
+let orbitCollapseT = 0;
 
 function spawnHeroCards(){
   return new Promise(resolve=>{
@@ -845,7 +851,7 @@ function spawnHeroCards(){
       vrx:-0.003, vry:0.005, vrz:0.001,
       suit:'♥', rank:'K', isBack:false,
       phase:'enter', done:false, active:true,
-      targetZ:550, targetX:-W*0.28,
+      targetZ:550,
       heroScale: HERO_SCALE
     };
     heroR = {
@@ -855,11 +861,10 @@ function spawnHeroCards(){
       vrx:0.003, vry:-0.004, vrz:-0.001,
       suit:'♥', rank:'A', isBack:false,
       phase:'enter', done:false, active:true,
-      targetZ:550, targetX:W*0.28,
+      targetZ:550,
       heroScale: HERO_SCALE
     };
     cards.push(heroL, heroR);
-
     const check = setInterval(()=>{
       if(heroL.phase==='hold' && heroR.phase==='hold'){
         clearInterval(check); resolve();
@@ -868,33 +873,91 @@ function spawnHeroCards(){
   });
 }
 
-// update hero card during enter/hold
+function startOrbit(){
+  orbitAngle    = Math.PI;
+  orbitSpeed    = 0.008;
+  orbitRadius   = W * 0.28;
+  orbitActive   = true;
+  orbitCollapse = false;
+  orbitCollapseT = 0;
+  if(heroL) heroL.phase = 'orbit';
+  if(heroR) heroR.phase = 'orbit';
+}
+
+function collapseOrbit(){
+  orbitCollapse  = true;
+  orbitCollapseT = 0;
+}
+
 function updateHero(card){
   if(card.phase==='enter'){
-    // decelerate toward target
     const dz = card.targetZ - card.z;
     if(dz <= 0.5){
-      card.z = card.targetZ;
-      card.vz = 0; card.phase='hold';
-      card.rx=0; card.ry=0; card.rz=0;
+      card.z = card.targetZ; card.vz = 0;
+      card.phase = 'hold';
+      card.rx = 0; card.ry = 0; card.rz = 0;
     } else {
       card.vz = Math.max(2, dz*0.08);
       card.z += card.vz;
       card.rx *= 0.96; card.ry *= 0.96; card.rz *= 0.96;
     }
   } else if(card.phase==='hold'){
-    // gentle float
     card.rx = Math.sin(Date.now()*0.001)*0.04;
     card.ry = Math.sin(Date.now()*0.0013)*0.06;
-  } else if(card.phase==='exit'){
-    // fly away into screen
-    card.vz -= 6;
-    card.z  += card.vz;
-    card.vy -= 0.5;
-    card.y  += card.vy;
-    card.rx += 0.015;
-    card.ry += card===heroL?-0.02:0.02;
-    if(card.z < -1500) card.done=true;
+  } else if(card.phase==='orbit'){
+    // position + tilt set by updateOrbit(), nothing extra needed
+  }
+}
+
+// Called every render frame — drives the K+A orbit
+function updateOrbit(){
+  if(!orbitActive) return;
+
+  if(orbitCollapse){
+    orbitCollapseT = Math.min(1, orbitCollapseT + 0.02);
+    const ease = orbitCollapseT < 0.5
+      ? 2*orbitCollapseT*orbitCollapseT
+      : 1 - Math.pow(-2*orbitCollapseT+2,2)/2;
+    // speed keeps climbing through collapse
+    orbitSpeed = Math.min(orbitSpeed + 0.006, 0.6);
+    // radius spirals in to zero
+    orbitRadius = W * 0.28 * (1 - ease);
+    // cards get sucked into screen depth
+    const pullZ = -2500;
+    if(heroL) heroL.z += (pullZ - heroL.z) * ease * 0.05;
+    if(heroR) heroR.z += (pullZ - heroR.z) * ease * 0.05;
+
+    if(orbitCollapseT >= 1){
+      if(heroL){ heroL.done = true; }
+      if(heroR){ heroR.done = true; }
+      orbitActive = false;
+      return;
+    }
+  } else {
+    // free spin — accelerate gradually
+    orbitSpeed = Math.min(orbitSpeed + 0.0006, 0.18);
+  }
+
+  orbitAngle += orbitSpeed;
+
+  // position K and A opposite each other on an ellipse
+  const rx = orbitRadius;
+  const ry = orbitRadius * 0.38; // flatten vertically for screen feel
+
+  if(heroL && heroL.phase==='orbit'){
+    heroL.x  = Math.cos(orbitAngle) * rx;
+    heroL.y  = Math.sin(orbitAngle) * ry;
+    // bank into the turn
+    heroL.rz = orbitAngle + Math.PI/2;
+    heroL.ry = Math.sin(orbitAngle) * Math.min(0.9, orbitSpeed * 30);
+    heroL.rx = Math.cos(orbitAngle) * Math.min(0.4, orbitSpeed * 12);
+  }
+  if(heroR && heroR.phase==='orbit'){
+    heroR.x  = Math.cos(orbitAngle + Math.PI) * rx;
+    heroR.y  = Math.sin(orbitAngle + Math.PI) * ry;
+    heroR.rz = orbitAngle + Math.PI + Math.PI/2;
+    heroR.ry = Math.sin(orbitAngle + Math.PI) * Math.min(0.9, orbitSpeed * 30);
+    heroR.rx = Math.cos(orbitAngle + Math.PI) * Math.min(0.4, orbitSpeed * 12);
   }
 }
 
@@ -945,6 +1008,9 @@ function renderLoop(){
 
   // prune done cards
   cards = cards.filter(c=>!c.done);
+
+  // drive K+A orbit
+  updateOrbit();
 
   rafId = requestAnimationFrame(renderLoop);
 }
@@ -1238,26 +1304,26 @@ async function run(){
 
   // ── PHASE 1: RAIN — cards fly from depth ──────────────────
   const rainPromises=[];
-  for(let i=0;i<36;i++){
-    rainPromises.push(spawnRainCard(i*rand(30,65)));
+  for(let i=0;i<20;i++){
+    rainPromises.push(spawnRainCard(i*rand(18,35)));
   }
   await Promise.all(rainPromises);
+  await delay(30);
+
+  // ── PHASE 2: CHAOS SHUFFLE (2 passes) ────────────────────
+  for(let pass=0;pass<2;pass++){
+    const n=10+(pass*4);
+    const pp=[];
+    for(let i=0;i<n;i++) pp.push(spawnShuffleCard(i*16));
+    await Promise.all(pp);
+    await delay(40);
+  }
   await delay(50);
 
-  // ── PHASE 2: CHAOS SHUFFLE (3 passes) ────────────────────
-  for(let pass=0;pass<3;pass++){
-    const n=14+(pass*5);
-    const pp=[];
-    for(let i=0;i<n;i++) pp.push(spawnShuffleCard(i*20));
-    await Promise.all(pp);
-    await delay(60);
-  }
-  await delay(80);
-
   // ── PHASE 3: FIBONACCI VORTEX ─────────────────────────────
-  const N=44;
+  const N=30;
   const fp=[];
-  for(let i=0;i<N;i++) fp.push(spawnFibCard(i,N,i*16));
+  for(let i=0;i<N;i++) fp.push(spawnFibCard(i,N,i*12));
   await Promise.all(fp);
   cards=[];
 
@@ -1265,13 +1331,16 @@ async function run(){
   await delay(80);
   await spawnHeroCards();
 
-  // hold for pulse glow effect (drawn by render loop already)
-  await delay(900);
+  // hold for pulse glow effect
+  await delay(700);
 
-  // ── PHASE 5: HERO CARDS EXIT INTO SCREEN ─────────────────
-  // They get sucked back deep before the tunnel
-  if(heroL) heroL.phase='exit';
-  if(heroR) heroR.phase='exit';
+  // ── PHASE 5: K + A START ORBITING, SPIN UP, THEN COLLAPSE ─
+  startOrbit();
+  // spin freely, accelerating
+  await delay(1200);
+
+  // collapse — orbit tightens and cards vanish into screen
+  collapseOrbit();
   await delay(700);
 
   // flash
@@ -1299,12 +1368,9 @@ async function run(){
     entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
   },{threshold:.1});
   document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
-
-  await delay(700);
-  $('intro-canvas').style.display='none';
-  $('welcome').style.display='none';
 }
 
+let tunnelRunning = false;
 run();
 </script>
 </body>
