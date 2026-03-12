@@ -1,3 +1,23 @@
+# Python
 *.pyc
 *.pyo
 __pycache__/
+.venv/
+
+# macOS
+.DS_Store
+
+# Archived files
+old/
+monolith/
+
+# Image processing frames (not used by the live site)
+clean_frames/
+eyes_only_cleaned/
+frames_no_labels/
+eye_zoom_frames/
+
+# Misc
+image.png
+pyproject.toml
+crop_frames.py
