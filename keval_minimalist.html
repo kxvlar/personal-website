@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keval Amin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  --bg:#03040a;
+  --bg2:#06080f;
+  --fg:#e8e4dc;
+  --fg-dim:rgba(232,228,220,.45);
+  --fg-muted:rgba(232,228,220,.2);
+  --accent:#c8a84a;
+  --accent-dim:rgba(200,168,74,.35);
+  --accent-glow:rgba(200,168,74,.12);
+  --red:#c0182a;
+  --red-glow:rgba(192,24,42,.6);
+  --border:rgba(232,228,220,.08);
+  --border-gold:rgba(200,168,74,.18);
+}
+
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
+
+/* ── INTRO CANVAS (full-screen 3D cards) ── */
+#intro-canvas{
+  position:fixed;inset:0;z-index:100;
+  width:100%;height:100%;
+  display:block;
+  background:var(--bg);
+}
+
+/* ── WELCOME OVERLAY ── */
+#welcome{
+  position:fixed;inset:0;z-index:110;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  pointer-events:none;opacity:0;
+}
+#welcome-sub{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(.65rem,1.2vw,.85rem);
+  font-weight:400;letter-spacing:.55em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:18px;
+  opacity:0;transform:translateY(10px);
+  transition:opacity .8s,transform .8s;
+}
+#welcome-name{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(3rem,9vw,9rem);
+  font-weight:800;letter-spacing:-.02em;
+  line-height:.9;
+  color:var(--fg);
+  text-align:center;
+  opacity:0;transform:translateY(16px);
+  transition:opacity .9s .15s,transform .9s .15s;
+}
+#welcome-rule{
+  width:0;height:1px;
+  background:linear-gradient(to right,transparent,var(--accent),transparent);
+  margin:22px 0 18px;
+  transition:width .9s .35s ease;
+}
+#welcome-tag{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-weight:300;
+  font-size:clamp(1rem,2vw,1.4rem);
+  letter-spacing:.1em;
+  color:var(--fg-dim);
+  opacity:0;transform:translateY(8px);
+  transition:opacity .8s .5s,transform .8s .5s;
+}
+#welcome.show #welcome-sub,
+#welcome.show #welcome-name,
+#welcome.show #welcome-tag{opacity:1;transform:translateY(0);}
+#welcome.show #welcome-rule{width:120px;}
+
+/* ── FLASH ── */
+#flash{position:fixed;inset:0;z-index:200;background:#fff;opacity:0;pointer-events:none;}
+
+/* ══════════════════════════════════════
+   PORTFOLIO
+══════════════════════════════════════ */
+#portfolio{
+  position:fixed;inset:0;z-index:10;
+  opacity:0;pointer-events:none;
+  background:var(--bg);
+  color:var(--fg);
+  overflow-y:auto;
+  scroll-behavior:smooth;
+  transition:opacity .7s ease;
+}
+#portfolio.visible{opacity:1;pointer-events:all;}
+
+/* grid lines background */
+#portfolio::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(var(--border) 1px,transparent 1px),
+    linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:80px 80px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 0%,black 30%,transparent 100%);
+}
+
+.p-inner{position:relative;z-index:1;min-height:100vh;}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  padding:20px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(to bottom,rgba(3,4,10,.95),transparent);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  opacity:0;transform:translateY(-12px);
+  transition:opacity .7s .2s,transform .7s .2s;
+}
+#portfolio.visible nav{opacity:1;transform:translateY(0);}
+.nav-logo{
+  font-family:'Syne',sans-serif;font-size:.95rem;
+  font-weight:700;letter-spacing:.06em;
+  color:var(--fg);
+}
+.nav-logo span{color:var(--accent);}
+.nav-links{display:flex;gap:32px;list-style:none;}
+.nav-links a{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--fg-dim);text-decoration:none;
+  transition:color .25s;
+}
+.nav-links a:hover{color:var(--fg);}
+
+/* HERO */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:center;
+  padding:140px 80px 80px;
+  position:relative;overflow:hidden;
+}
+@media(max-width:768px){.hero{padding:120px 32px 80px;}}
+
+.hero-kicker{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:.7rem;letter-spacing:.5em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:24px;
+  opacity:0;transform:translateY(12px);
+  transition:opacity .8s .4s,transform .8s .4s;
+}
+#portfolio.visible .hero-kicker{opacity:1;transform:translateY(0);}
+
+.hero-h1{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(3.5rem,9vw,9.5rem);
+  font-weight:800;letter-spacing:-.03em;line-height:.9;
+  color:var(--fg);margin-bottom:32px;
+  opacity:0;transform:translateY(24px);
+  transition:opacity 1s .55s,transform 1s .55s;
+}
+#portfolio.visible .hero-h1{opacity:1;transform:translateY(0);}
+
+.hero-desc{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1.1rem,2.2vw,1.5rem);
+  font-style:italic;font-weight:300;
+  color:var(--fg-dim);max-width:560px;line-height:1.7;
+  margin-bottom:52px;
+  opacity:0;transform:translateY(14px);
+  transition:opacity .8s .75s,transform .8s .75s;
+}
+#portfolio.visible .hero-desc{opacity:1;transform:translateY(0);}
+
+.hero-cta{
+  display:flex;gap:16px;flex-wrap:wrap;
+  opacity:0;transform:translateY(10px);
+  transition:opacity .8s .9s,transform .8s .9s;
+}
+#portfolio.visible .hero-cta{opacity:1;transform:translateY(0);}
+
+/* large background name watermark */
+.hero-bg-name{
+  position:absolute;right:-2%;bottom:-8%;
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:clamp(8rem,22vw,22rem);letter-spacing:-.05em;
+  color:rgba(232,228,220,.025);pointer-events:none;user-select:none;
+  line-height:1;white-space:nowrap;
+}
+
+/* BUTTONS */
+.btn{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;
+  text-decoration:none;padding:13px 32px;cursor:pointer;
+  transition:all .25s;border:none;display:inline-block;
+}
+.btn-fill{background:var(--accent);color:#09060a;}
+.btn-fill:hover{background:var(--fg);transform:translateY(-2px);}
+.btn-ghost{background:transparent;color:var(--fg-dim);border:1px solid var(--border-gold);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px);}
+
+/* SECTIONS */
+.section{padding:100px 80px;max-width:1280px;margin:0 auto;}
+@media(max-width:768px){.section{padding:80px 32px;}}
+
+.s-label{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:.62rem;letter-spacing:.5em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:12px;
+}
+.s-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(1.8rem,4.5vw,3.8rem);
+  font-weight:800;letter-spacing:-.02em;
+  color:var(--fg);margin-bottom:64px;line-height:1.0;
+}
+
+/* PROJECTS */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;background:var(--border);}
+.pcard{
+  background:var(--bg2);padding:40px;
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:background .3s;
+}
+.pcard::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(to right,transparent,var(--accent),transparent);
+  transform:scaleX(0);transition:transform .4s;
+}
+.pcard:hover{background:#0a0c16;}
+.pcard:hover::before{transform:scaleX(1);}
+.p-num{font-family:'Space Grotesk',sans-serif;font-size:.58rem;letter-spacing:.4em;color:var(--accent-dim);margin-bottom:20px;}
+.p-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:-.01em;color:var(--fg);margin-bottom:10px;}
+.p-desc{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.98rem;color:var(--fg-dim);line-height:1.75;margin-bottom:22px;}
+.p-tags{display:flex;gap:7px;flex-wrap:wrap;}
+.tag{
+  font-family:'Space Grotesk',sans-serif;font-size:.56rem;
+  letter-spacing:.18em;text-transform:uppercase;
+  padding:4px 9px;border:1px solid var(--border);color:var(--fg-muted);
+  transition:border-color .25s,color .25s;
+}
+.pcard:hover .tag{border-color:var(--border-gold);color:var(--fg-dim);}
+
+/* ABOUT */
+.about-cols{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;}
+@media(max-width:768px){.about-cols{grid-template-columns:1fr;gap:40px;}}
+.about-body p{font-family:'Cormorant Garamond',serif;font-size:1.2rem;line-height:1.9;color:var(--fg-dim);margin-bottom:18px;}
+.about-body strong{color:var(--fg);font-style:italic;font-weight:300;}
+.skill-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);}
+.skill-item{
+  background:var(--bg2);padding:12px 16px;
+  font-family:'Space Grotesk',sans-serif;font-size:.66rem;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--fg-dim);
+  transition:background .25s,color .25s;
+}
+.skill-item:hover{background:#0a0c16;color:var(--fg);}
+
+/* CONTACT */
+.contact-inner{max-width:600px;}
+.contact-inner p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.15rem;color:var(--fg-dim);line-height:1.8;margin-bottom:40px;}
+.clinks{display:flex;gap:20px;flex-wrap:wrap;}
+.clink{
+  font-family:'Space Grotesk',sans-serif;font-size:.65rem;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--fg-dim);text-decoration:none;
+  padding-bottom:3px;border-bottom:1px solid var(--border);
+  transition:color .25s,border-color .25s;
+}
+.clink:hover{color:var(--accent);border-color:var(--accent);}
+
+/* FOOTER */
+footer{
+  border-top:1px solid var(--border);
+  padding:28px 80px;
+  display:flex;align-items:center;justify-content:space-between;
+  max-width:100%;
+}
+@media(max-width:768px){footer{padding:28px 32px;}}
+footer p{font-family:'Space Grotesk',sans-serif;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--fg-muted);}
+
+/* DIVIDER */
+.hdivider{
+  width:40px;height:1px;
+  background:linear-gradient(to right,var(--accent),transparent);
+  margin-bottom:14px;
+}
+
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .85s ease,transform .85s ease;}
+.reveal.in{opacity:1;transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<canvas id="intro-canvas"></canvas>
+
+<div id="welcome">
+  <div id="welcome-sub">Welcome to the lair of</div>
+  <div id="welcome-name">Keval<br>Amin</div>
+  <div id="welcome-rule"></div>
+  <div id="welcome-tag">Designer &nbsp;·&nbsp; Developer &nbsp;·&nbsp; Creator</div>
+</div>
+
+<div id="flash"></div>
+
+<div id="portfolio">
+  <div class="p-inner">
+    <nav>
+      <div class="nav-logo">K<span>.</span>Amin</div>
+      <ul class="nav-links">
+        <li><a href="#work">Work</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+
+    <section class="hero">
+      <div class="hero-bg-name">KA</div>
+      <div class="hero-kicker">Portfolio — 2025</div>
+      <h1 class="hero-h1">Keval<br>Amin</h1>
+      <p class="hero-desc">Designer &amp; developer crafting digital experiences that feel inevitable.</p>
+      <div class="hero-cta">
+        <a href="#work" class="btn btn-fill">View Work</a>
+        <a href="#contact" class="btn btn-ghost">Get In Touch</a>
+      </div>
+    </section>
+
+    <section class="section" id="work">
+      <div class="reveal">
+        <div class="hdivider"></div>
+        <div class="s-label">Selected Work</div>
+        <h2 class="s-title">Projects &amp;<br>Experiments</h2>
+      </div>
+      <div class="grid reveal" style="transition-delay:.1s">
+        <div class="pcard">
+          <div class="p-num">01 — Design</div>
+          <div class="p-title">Brand Identity System</div>
+          <p class="p-desc">A comprehensive visual language built for clarity at scale — from micro-animations to full style guides.</p>
+          <div class="p-tags"><span class="tag">Figma</span><span class="tag">Motion</span><span class="tag">Strategy</span></div>
+        </div>
+        <div class="pcard">
+          <div class="p-num">02 — Development</div>
+          <div class="p-title">Interactive Data Platform</div>
+          <p class="p-desc">Real-time dashboards surfacing complex datasets through thoughtful information architecture.</p>
+          <div class="p-tags"><span class="tag">React</span><span class="tag">D3</span><span class="tag">Node</span></div>
+        </div>
+        <div class="pcard">
+          <div class="p-num">03 — Full-Stack</div>
+          <div class="p-title">E-Commerce Experience</div>
+          <p class="p-desc">End-to-end retail platform — from conversion-focused UI to robust payment infrastructure.</p>
+          <div class="p-tags"><span class="tag">Next.js</span><span class="tag">Stripe</span><span class="tag">UX</span></div>
+        </div>
+        <div class="pcard">
+          <div class="p-num">04 — Creative</div>
+          <div class="p-title">Generative Art Series</div>
+          <p class="p-desc">A collection of algorithmically generated works exploring order emerging from chaos.</p>
+          <div class="p-tags"><span class="tag">Canvas API</span><span class="tag">GLSL</span><span class="tag">Three.js</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="about">
+      <div class="reveal">
+        <div class="hdivider"></div>
+        <div class="s-label">About</div>
+        <h2 class="s-title">The Hand<br>I Play</h2>
+      </div>
+      <div class="about-cols">
+        <div class="about-body reveal">
+          <p>I'm <strong>Keval Amin</strong> — a designer and developer who believes the best digital experiences feel inevitable. Not clever, not showy. Just <strong>exactly right</strong>.</p>
+          <p>With a background spanning product design, frontend engineering, and creative direction, I move between <strong>precision of code</strong> and the intuition of design.</p>
+          <p>Currently open to <strong>select projects</strong> and full-time opportunities where craft is taken seriously.</p>
+        </div>
+        <div class="reveal" style="transition-delay:.12s">
+          <div class="skill-grid">
+            <div class="skill-item">Product Design</div><div class="skill-item">React / Next.js</div>
+            <div class="skill-item">UI Animation</div><div class="skill-item">TypeScript</div>
+            <div class="skill-item">Design Systems</div><div class="skill-item">Node.js</div>
+            <div class="skill-item">Figma / Framer</div><div class="skill-item">PostgreSQL</div>
+            <div class="skill-item">Brand Identity</div><div class="skill-item">WebGL / Three.js</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="contact-inner reveal">
+        <div class="hdivider"></div>
+        <div class="s-label">Contact</div>
+        <h2 class="s-title">Let's Build<br>Something</h2>
+        <p>Whether you have a project in mind or just want to say hello — I'd love to hear from you.</p>
+        <div class="clinks">
+          <a href="mailto:hello@kevalamin.com" class="clink">Email</a>
+          <a href="#" class="clink">LinkedIn</a>
+          <a href="#" class="clink">GitHub</a>
+          <a href="#" class="clink">Twitter</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>© 2025 Keval Amin</p>
+      <p>♠ ♥ ♦ ♣</p>
+    </footer>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  HYPER-REALISTIC 3D CARD ENGINE — full Canvas2D renderer
+//  Each card is drawn with:
+//   • perspective projection (z-depth → scale + shadow offset)
+//   • surface normal lighting (directional + ambient)
+//   • specular glint strip
+//   • edge bevel highlights
+//   • cast shadow on background
+//   • motion blur ghost at high velocity
+// ═══════════════════════════════════════════════════════════
+
+const canvas = document.getElementById('intro-canvas');
+const ctx    = canvas.getContext('2d');
+const $      = id => document.getElementById(id);
+const rand   = (a,b) => a + Math.random()*(b-a);
+const clamp  = (v,a,b) => Math.max(a,Math.min(b,v));
+const delay  = ms => new Promise(r => setTimeout(r,ms));
+const TAU    = Math.PI*2;
+const PHI    = Math.PI*(3-Math.sqrt(5));
+
+let W, H, cx, cy;
+function resize(){
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  cx = W/2; cy = H/2;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ─── LIGHT SOURCE (world-space) ────────────────────────────
+const LIGHT = { x:0.4, y:-0.7, z:0.6 }; // normalised
+const mag = Math.hypot(LIGHT.x,LIGHT.y,LIGHT.z);
+LIGHT.x/=mag; LIGHT.y/=mag; LIGHT.z/=mag;
+
+// ─── CARD GEOMETRY ─────────────────────────────────────────
+// A card lives in 3-space: (x,y,z) position, (rx,ry,rz) euler angles
+// z > 0  =  closer to viewer
+
+const CARD_W = 0.063; // in normalised units (fraction of screen short side)
+const CARD_H = CARD_W * 1.4;
+const FOV    = 700;   // perspective focal length (px)
+
+function project(x3,y3,z3){
+  // Simple perspective: origin = screen centre, camera at z = -1
+  const s = FOV / (FOV + z3);
+  return { x: cx + x3*s, y: cy + y3*s, s };
+}
+
+// ─── DRAW ONE CARD FACE (cream) ────────────────────────────
+function drawCardFace(ctx, w, h, suit, rank, isBack, lightX, lightY, lightZ){
+  const r = w*0.06; // corner radius
+
+  // 1 — Base paper gradient
+  const g = ctx.createLinearGradient(-w/2,-h/2,w/2,h/2);
+  if(isBack){
+    g.addColorStop(0,'#1a0e36');
+    g.addColorStop(0.5,'#2d1a62');
+    g.addColorStop(1,'#1a0e36');
+  } else {
+    g.addColorStop(0,'#fdf8f0');
+    g.addColorStop(0.5,'#f8f0e0');
+    g.addColorStop(1,'#f0e8d4');
+  }
+  roundRect(ctx,-w/2,-h/2,w,h,r);
+  ctx.fillStyle = g;
+  ctx.fill();
+
+  // 2 — Surface lighting (diffuse)
+  // Normal of card face = (0,0,1) rotated by card orientation → approximated
+  // by the light vector projected onto screen-space card normal
+  const diffuse = clamp(lightZ*0.7 + 0.3, 0, 1);
+  const diffG = ctx.createRadialGradient(
+    lightX*w*0.4, lightY*h*0.4, 0,
+    0, 0, Math.max(w,h)
+  );
+  if(isBack){
+    diffG.addColorStop(0, `rgba(80,60,140,${0.35*diffuse})`);
+    diffG.addColorStop(1, `rgba(0,0,0,${0.4*(1-diffuse*0.5)})`);
+  } else {
+    diffG.addColorStop(0, `rgba(255,252,245,${0.55*diffuse})`);
+    diffG.addColorStop(1, `rgba(200,180,140,${0.2*(1-diffuse*0.4)})`);
+  }
+  roundRect(ctx,-w/2,-h/2,w,h,r);
+  ctx.fillStyle = diffG;
+  ctx.fill();
+
+  // 3 — Specular glint strip
+  const specAngle = Math.atan2(lightY,lightX);
+  const specX = Math.cos(specAngle)*w*0.25;
+  const specY = Math.sin(specAngle)*h*0.25;
+  const specG = ctx.createLinearGradient(
+    specX-w*0.3, specY-h*0.3,
+    specX+w*0.3, specY+h*0.3
+  );
+  const specPow = clamp(lightZ,0,1);
+  specG.addColorStop(0,'rgba(255,255,255,0)');
+  specG.addColorStop(0.45,'rgba(255,255,255,0)');
+  specG.addColorStop(0.5, `rgba(255,255,255,${0.45*specPow})`);
+  specG.addColorStop(0.55,'rgba(255,255,255,0)');
+  specG.addColorStop(1,'rgba(255,255,255,0)');
+  roundRect(ctx,-w/2,-h/2,w,h,r);
+  ctx.fillStyle = specG;
+  ctx.fill();
+
+  // 4 — Edge bevel (thin bright line on lit edges)
+  ctx.save();
+  roundRect(ctx,-w/2,-h/2,w,h,r);
+  ctx.clip();
+  const bevelAlpha = clamp(lightZ*0.8,0.05,0.5);
+  ctx.strokeStyle = isBack
+    ? `rgba(140,100,255,${bevelAlpha})`
+    : `rgba(255,255,240,${bevelAlpha*1.4})`;
+  ctx.lineWidth = 2;
+  roundRect(ctx,-w/2+1,-h/2+1,w-2,h-2,r);
+  ctx.stroke();
+  ctx.restore();
+
+  // 5 — Card border (outer)
+  ctx.strokeStyle = isBack
+    ? `rgba(200,168,74,0.6)`
+    : `rgba(0,0,0,0.12)`;
+  ctx.lineWidth = 1.5;
+  roundRect(ctx,-w/2,-h/2,w,h,r);
+  ctx.stroke();
+
+  // 6 — Content
+  if(isBack){
+    drawBackDesign(ctx, w, h);
+  } else {
+    drawFaceContent(ctx, w, h, suit, rank);
+  }
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  r = Math.max(0, Math.min(r, Math.abs(w)/2, Math.abs(h)/2));
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+function drawBackDesign(ctx,w,h){
+  ctx.save();
+  // Gold filigree inner border
+  const ib = w*0.07;
+  ctx.strokeStyle='rgba(200,168,74,0.4)';
+  ctx.lineWidth=1;
+  roundRect(ctx,-w/2+ib,-h/2+ib,w-ib*2,h-ib*2,w*0.04);
+  ctx.stroke();
+  // Subtle diagonal cross-hatch
+  ctx.globalAlpha=0.07;
+  ctx.strokeStyle='rgba(200,168,74,1)';
+  ctx.lineWidth=0.5;
+  for(let i=-w;i<w;i+=w*0.08){
+    ctx.beginPath();ctx.moveTo(i,-h/2);ctx.lineTo(i+h/2,h/2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(i,-h/2);ctx.lineTo(i-h/2,h/2);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  // Centre diamond
+  ctx.save();
+  ctx.rotate(Math.PI/4);
+  ctx.fillStyle='rgba(200,168,74,0.15)';
+  ctx.fillRect(-w*0.12,-w*0.12,w*0.24,w*0.24);
+  ctx.strokeStyle='rgba(200,168,74,0.5)';
+  ctx.lineWidth=1;
+  ctx.strokeRect(-w*0.12,-w*0.12,w*0.24,w*0.24);
+  ctx.restore();
+  ctx.restore();
+}
+
+const RED_SUITS  = new Set(['♥','♦']);
+function suitColor(suit){ return RED_SUITS.has(suit)?'#c0182a':'#1a1a2e'; }
+
+function drawFaceContent(ctx,w,h,suit,rank){
+  ctx.save();
+  const col = suitColor(suit);
+  const cPad = w*0.09;
+  const cFontSz = w*0.17;
+  ctx.font = `bold ${cFontSz}px 'Space Grotesk',sans-serif`;
+  ctx.fillStyle = col;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  // Corner TL
+  ctx.fillText(rank, -w/2+cPad+cFontSz*0.3, -h/2+cPad);
+  ctx.font = `${cFontSz*0.75}px serif`;
+  ctx.fillText(suit, -w/2+cPad+cFontSz*0.3, -h/2+cPad+cFontSz);
+  // Corner BR (rotated)
+  ctx.save();
+  ctx.rotate(Math.PI);
+  ctx.font = `bold ${cFontSz}px 'Space Grotesk',sans-serif`;
+  ctx.fillText(rank, -w/2+cPad+cFontSz*0.3, -h/2+cPad);
+  ctx.font = `${cFontSz*0.75}px serif`;
+  ctx.fillText(suit, -w/2+cPad+cFontSz*0.3, -h/2+cPad+cFontSz);
+  ctx.restore();
+  // Centre pip
+  ctx.font = `${w*0.48}px serif`;
+  ctx.fillStyle = col;
+  ctx.globalAlpha = 0.9;
+  // text shadow glow for red
+  if(RED_SUITS.has(suit)){
+    ctx.shadowColor='rgba(192,24,42,0.5)';
+    ctx.shadowBlur=w*0.15;
+  }
+  ctx.fillText(suit, 0, 0);
+  ctx.shadowBlur=0;
+  ctx.globalAlpha=1;
+  ctx.restore();
+}
+
+// ─── DRAW 3D CARD OBJECT ───────────────────────────────────
+// card = { x,y,z, rx,ry,rz, suit,rank,isBack }
+// Renders perspective-projected card with 3D tilt shading
+
+function drawCard3D(card){
+  const { x, y, z, rx, ry, rz, suit, rank, isBack } = card;
+  const baseS = Math.min(W,H);
+  const heroMul = card.heroScale || 1;
+  const cw = baseS*CARD_W*heroMul;
+  const ch = baseS*CARD_H*heroMul;
+
+  // perspective
+  const s  = FOV/(FOV + z);
+  const px = cx + x*s;
+  const py = cy + y*s;
+
+  // card half-size in screen pixels
+  const hw = cw*s*0.5;
+  const hh = ch*s*0.5;
+
+  // Approximate 3D rotated normal for lighting
+  // Using small-angle approximation of surface normal given rx,ry tilt
+  const nx = Math.sin(ry);
+  const ny = -Math.sin(rx)*Math.cos(ry);
+  const nz = Math.cos(rx)*Math.cos(ry);
+  const dot = nx*LIGHT.x + ny*LIGHT.y + nz*LIGHT.z;
+  const diffuse = clamp(dot*0.65 + 0.45, 0.1, 1.0);
+
+  // Light direction projected to card-local screen coords
+  const lightLocalX = LIGHT.x*Math.cos(rz) + LIGHT.y*Math.sin(rz);
+  const lightLocalY =-LIGHT.x*Math.sin(rz) + LIGHT.y*Math.cos(rz);
+
+  // skip cards too small or behind camera
+  if(hw < 1 || hh < 1 || s <= 0){ return; }
+
+  // cast shadow (offset by light and depth)
+  const shadowDist = (500-z)*0.012;
+  const shadowBlur  = Math.max(0, 18 + (500-z)*0.03);
+  ctx.save();
+  ctx.translate(px + LIGHT.x*shadowDist, py - LIGHT.y*shadowDist);
+  ctx.rotate(rz);
+  ctx.scale(1, Math.abs(Math.cos(rx)));
+  // shadow shape
+  roundRect(ctx, -hw*1.04, -hh*1.04, hw*2.08, hh*2.08, hw*0.06);
+  ctx.fillStyle = `rgba(0,0,0,${clamp(0.55*(s*s),0.05,0.55)})`;
+  ctx.filter = `blur(${shadowBlur}px)`;
+  ctx.fill();
+  ctx.filter='none';
+  ctx.restore();
+
+  // motion ghost at high velocity (subtle blur trail)
+  if(card.vx !== undefined){
+    const speed = Math.hypot(card.vx, card.vy, card.vz||0);
+    if(speed > 3){
+      const ghostCount = Math.min(3, Math.floor(speed/4));
+      for(let g=1;g<=ghostCount;g++){
+        const gf = g/ghostCount;
+        ctx.save();
+        ctx.globalAlpha = 0.07*(1-gf);
+        ctx.translate(px - card.vx*g*0.4, py - card.vy*g*0.4);
+        ctx.rotate(rz);
+        ctx.scale(1*s, Math.cos(rx)*s);
+        roundRect(ctx,-cw/2,-ch/2,cw,ch,cw*0.06);
+        ctx.fillStyle='rgba(200,200,220,1)';
+        ctx.fill();
+        ctx.restore();
+        ctx.globalAlpha=1;
+      }
+    }
+  }
+
+  // actual card face
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(rz);
+  const cosRx = Math.abs(Math.cos(rx)); // abs prevents negative scale
+  ctx.scale(s, cosRx*s);
+
+  // show back vs face based on ry > π/2
+  const showBack = isBack || (Math.abs(ry%(TAU)) > Math.PI/2 && Math.abs(ry%(TAU)) < Math.PI*1.5);
+
+  // dim by diffuse
+  ctx.globalAlpha = clamp(diffuse * 0.92 + 0.08, 0.15, 1.0);
+  drawCardFace(ctx, cw, ch, suit, rank, showBack, lightLocalX, lightLocalY, nz);
+  ctx.globalAlpha = 1;
+
+  // diffuse overlay (darken non-lit face)
+  if(diffuse < 0.8){
+    roundRect(ctx,-cw/2,-ch/2,cw,ch,cw*0.06);
+    ctx.fillStyle = `rgba(0,0,10,${(1-diffuse)*0.45})`;
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+// ─── CARD POOL ─────────────────────────────────────────────
+const SUITS  = ['♥','♦','♠','♣'];
+const RANKS  = ['A','K','Q','J','10','9','8','7','6','5','4','3','2'];
+function rSuit(){ return SUITS[Math.floor(rand(0,4))]; }
+function rRank(){ return RANKS[Math.floor(rand(0,13))]; }
+
+// ─── SCENE STATE ───────────────────────────────────────────
+let cards = [];
+let phase = 'idle';
+
+// ─── PHASE 1: RAIN ─────────────────────────────────────────
+// Cards fly in from back (z = -2000) and zoom toward viewer, 
+// then arc away below/above screen — pure Z-axis motion
+function spawnRainCard(delay_ms){
+  return new Promise(resolve => {
+    const suit  = rSuit();
+    const rank  = rRank();
+    const isBack= Math.random()<0.55;
+    // start far away, slightly off-centre
+    const startX = rand(-W*0.5, W*0.5);
+    const startY = rand(-H*0.5, H*0.5);
+    const startZ = rand(-1800, -800);
+    const card = {
+      x:startX, y:startY, z:startZ,
+      vx:rand(-2,2), vy:rand(1,4), vz:rand(28,55),
+      rx:rand(-0.4,0.4), ry:rand(-0.5,0.5), rz:rand(-0.6,0.6),
+      vrx:rand(-0.02,0.02), vry:rand(-0.03,0.03), vrz:rand(-0.025,0.025),
+      suit, rank, isBack, done:false, active:false
+    };
+
+    setTimeout(()=>{
+      card.active = true;
+      cards.push(card);
+      // resolve once card has passed z > 600 (past viewer)
+      const check = setInterval(()=>{
+        if(card.z > 700){ card.done=true; clearInterval(check); resolve(); }
+      },16);
+    }, delay_ms);
+  });
+}
+
+// ─── PHASE 2: CHAOS SHUFFLE ────────────────────────────────
+function spawnShuffleCard(delay_ms){
+  return new Promise(resolve=>{
+    const suit=rSuit(),rank=rRank(),isBack=Math.random()<0.5;
+    // burst from centre
+    const angle = rand(0,TAU);
+    const speed = rand(8,18);
+    const card = {
+      x:0, y:0, z:rand(50,300),
+      vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed, vz:rand(-6,10),
+      rx:rand(-1,1),ry:rand(-1,1),rz:rand(-1,1),
+      vrx:rand(-0.06,0.06),vry:rand(-0.08,0.08),vrz:rand(-0.05,0.05),
+      suit,rank,isBack,done:false,active:false,
+      life:0, maxLife:40
+    };
+    setTimeout(()=>{
+      card.active=true; cards.push(card);
+      const check=setInterval(()=>{
+        if(card.life>=card.maxLife){card.done=true;clearInterval(check);resolve();}
+      },16);
+    },delay_ms);
+  });
+}
+
+// ─── PHASE 3: FIBONACCI VORTEX ─────────────────────────────
+function spawnFibCard(i,N,delay_ms){
+  return new Promise(resolve=>{
+    const suit=rSuit(),rank=rRank(),isBack=Math.random()<0.45;
+    const fibAngle = i*PHI;
+    const fibR     = Math.sqrt(i/N)*Math.min(W,H)*0.45;
+    // start at Fibonacci position on XY plane, mid-Z
+    const sx = Math.cos(fibAngle)*fibR;
+    const sy = Math.sin(fibAngle)*fibR;
+    const sz = rand(-200,200);
+    const turns = (1.2 + fibR/300)*TAU;
+    const card = {
+      x:sx,y:sy,z:sz,
+      vx:0,vy:0,vz:0,
+      rx:rand(-0.6,0.6),ry:rand(-0.8,0.8),rz:fibAngle,
+      vrx:rand(-0.04,0.04),vry:rand(-0.05,0.05),vrz:0,
+      suit,rank,isBack,done:false,active:false,
+      // spiral params
+      fibR,fibAngle,turns,
+      spiralT:0
+    };
+    setTimeout(()=>{
+      card.active=true; cards.push(card);
+      const check=setInterval(()=>{
+        if(card.spiralT>=1){card.done=true;clearInterval(check);resolve();}
+      },16);
+    },delay_ms);
+  });
+}
+
+// Update spiral card per frame
+function updateFibCard(card){
+  const dt = 0.018;
+  card.spiralT = Math.min(1, card.spiralT+dt);
+  const t = card.spiralT;
+  // ease in-out
+  const ease = t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  const curAngle = card.fibAngle + card.turns*ease;
+  const curR = card.fibR*(1-ease);
+  card.x = Math.cos(curAngle)*curR;
+  card.y = Math.sin(curAngle)*curR;
+  card.z = card.z*(1-ease*0.03);
+  card.rz = curAngle;
+  card.rx += card.vrx;
+  card.ry += card.vry;
+}
+
+// ─── HERO CARDS (K♥ and A♥) ─────────────────────────────────
+// They fly out from deep z, slow to a stop close to viewer — BIG
+let heroL = null, heroR = null;
+
+// Hero cards use a larger scale multiplier
+const HERO_SCALE = 5.5; // much bigger — fills the screen dramatically
+
+function spawnHeroCards(){
+  return new Promise(resolve=>{
+    heroL = {
+      x:-W*0.28, y:0, z:-1800,
+      vx:0, vy:0, vz:65,
+      rx:0.08, ry:-0.18, rz:-0.03,
+      vrx:-0.003, vry:0.005, vrz:0.001,
+      suit:'♥', rank:'K', isBack:false,
+      phase:'enter', done:false, active:true,
+      targetZ:550, targetX:-W*0.28,
+      heroScale: HERO_SCALE
+    };
+    heroR = {
+      x:W*0.28, y:0, z:-2000,
+      vx:0, vy:0, vz:65,
+      rx:-0.06, ry:0.15, rz:0.02,
+      vrx:0.003, vry:-0.004, vrz:-0.001,
+      suit:'♥', rank:'A', isBack:false,
+      phase:'enter', done:false, active:true,
+      targetZ:550, targetX:W*0.28,
+      heroScale: HERO_SCALE
+    };
+    cards.push(heroL, heroR);
+
+    const check = setInterval(()=>{
+      if(heroL.phase==='hold' && heroR.phase==='hold'){
+        clearInterval(check); resolve();
+      }
+    },16);
+  });
+}
+
+// update hero card during enter/hold
+function updateHero(card){
+  if(card.phase==='enter'){
+    // decelerate toward target
+    const dz = card.targetZ - card.z;
+    if(dz <= 0.5){
+      card.z = card.targetZ;
+      card.vz = 0; card.phase='hold';
+      card.rx=0; card.ry=0; card.rz=0;
+    } else {
+      card.vz = Math.max(2, dz*0.08);
+      card.z += card.vz;
+      card.rx *= 0.96; card.ry *= 0.96; card.rz *= 0.96;
+    }
+  } else if(card.phase==='hold'){
+    // gentle float
+    card.rx = Math.sin(Date.now()*0.001)*0.04;
+    card.ry = Math.sin(Date.now()*0.0013)*0.06;
+  } else if(card.phase==='exit'){
+    // fly away into screen
+    card.vz -= 6;
+    card.z  += card.vz;
+    card.vy -= 0.5;
+    card.y  += card.vy;
+    card.rx += 0.015;
+    card.ry += card===heroL?-0.02:0.02;
+    if(card.z < -1500) card.done=true;
+  }
+}
+
+// ─── MAIN RENDER LOOP ──────────────────────────────────────
+let rafId = null;
+let sceneRunning = true;
+
+function renderLoop(){
+  if(!sceneRunning) return;
+  ctx.clearRect(0,0,W,H);
+
+  // deep black background
+  ctx.fillStyle='#03040a';
+  ctx.fillRect(0,0,W,H);
+
+  // subtle grid pattern
+  ctx.save();
+  ctx.strokeStyle='rgba(200,168,74,0.025)';
+  ctx.lineWidth=1;
+  const gs=80;
+  for(let gx=0;gx<W;gx+=gs){ ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke(); }
+  for(let gy=0;gy<H;gy+=gs){ ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke(); }
+  ctx.restore();
+
+  // sort cards back→front for correct overdraw
+  cards.sort((a,b)=>a.z-b.z);
+
+  for(const card of cards){
+    if(!card.active) continue;
+    if(card.spiralT !== undefined){
+      updateFibCard(card);
+    } else if(card===heroL || card===heroR){
+      updateHero(card);
+    } else if(card.life !== undefined){
+      // shuffle card
+      card.x += card.vx; card.y += card.vy; card.z += card.vz;
+      card.rx+=card.vrx; card.ry+=card.vry; card.rz+=card.vrz;
+      card.vx*=0.95; card.vy*=0.95; card.vz*=0.97;
+      card.life++;
+    } else {
+      // rain card
+      card.x+=card.vx; card.y+=card.vy; card.z+=card.vz;
+      card.rx+=card.vrx; card.ry+=card.vry; card.rz+=card.vrz;
+      card.vz*=1.015; // accelerate
+    }
+    drawCard3D(card);
+  }
+
+  // prune done cards
+  cards = cards.filter(c=>!c.done);
+
+  rafId = requestAnimationFrame(renderLoop);
+}
+
+// ─── HYPERSPACE TUNNEL ─────────────────────────────────────
+// Star Wars jump-to-hyperspace: stars start as points, then
+// compress to a ring, then explode into infinite blue-white
+// streaks flying past you. Ends with a pure-white jump flash.
+function runTunnel(){
+  return new Promise(resolve=>{
+    tunnelRunning = true;
+    const welcome = $('welcome');
+    const start_ts = performance.now();
+    const DURATION = 3800;
+
+    // ── Generate star field ──
+    // Phase A (0–0.18): static star dots
+    // Phase B (0.18–0.45): stars pull inward, compress to ring
+    // Phase C (0.45–0.88): full warp — long streaks shooting past
+    // Phase D (0.88–1.0): tunnel narrows to white core, flash
+    const NUM_STARS = 600;
+    const stars = Array.from({length: NUM_STARS}, () => {
+      const angle  = Math.random() * TAU;
+      const baseDist = 0.05 + Math.random() * 0.95; // 0=centre,1=edge
+      // colour: mix of pure white, ice blue, pale cyan
+      const tint = Math.random();
+      const r = tint < 0.5 ? 220 + Math.floor(Math.random()*35) : 180 + Math.floor(Math.random()*40);
+      const g = tint < 0.5 ? 230 + Math.floor(Math.random()*25) : 210 + Math.floor(Math.random()*30);
+      const b = 255;
+      return {
+        angle,
+        baseDist,
+        speed: 0.55 + Math.random() * 0.9,
+        r, g, b,
+        baseWidth: 0.4 + Math.random() * 1.4,
+        // small random phase offset so stars don't all move identically
+        jitter: (Math.random() - 0.5) * 0.04
+      };
+    });
+
+    // ── Some fat bright hero streaks for the iconic look ──
+    const NUM_HERO = 40;
+    const heroStreaks = Array.from({length: NUM_HERO}, () => ({
+      angle: Math.random() * TAU,
+      baseDist: 0.1 + Math.random() * 0.85,
+      speed: 0.7 + Math.random() * 0.3,
+      width: 1.5 + Math.random() * 3,
+      opacity: 0.5 + Math.random() * 0.5
+    }));
+
+    function drawHyperspace(now){
+      if(!tunnelRunning) return;
+      const elapsed  = now - start_ts;
+      const progress = Math.min(1, elapsed / DURATION);
+
+      // ── phase breakdowns
+      const dotPhase    = Math.min(1, progress / 0.18);                       // 0→1
+      const compressT   = Math.max(0, Math.min(1,(progress-0.18)/0.27));      // compress to ring
+      const warpT       = Math.max(0, Math.min(1,(progress-0.45)/0.43));      // streak phase
+      const finalT      = Math.max(0, Math.min(1,(progress-0.88)/0.12));      // white flash
+
+      // smooth warp power — exponential ramp
+      const warpPow = Math.pow(warpT, 0.55);
+
+      // ── background
+      // Deep space black → electric blue core as warp builds
+      ctx.fillStyle = '#00000a';
+      ctx.fillRect(0, 0, W, H);
+
+      // Background blue nebula bloom
+      if(warpT > 0){
+        const nebulaR = Math.min(cx,cy) * (0.5 + warpPow * 3.5);
+        const neb = ctx.createRadialGradient(cx,cy,0, cx,cy, nebulaR);
+        neb.addColorStop(0,   `rgba(30,60,200,${0.06 + warpPow*0.28})`);
+        neb.addColorStop(0.25,`rgba(10,25,120,${0.04 + warpPow*0.14})`);
+        neb.addColorStop(0.6, `rgba(5,5,60,${warpPow*0.08})`);
+        neb.addColorStop(1,   'rgba(0,0,0,0)');
+        ctx.fillStyle = neb;
+        ctx.fillRect(0,0,W,H);
+      }
+
+      // ── PHASE A+B: Stars as dots, then pulling inward
+      if(warpT < 0.5){
+        for(const star of stars){
+          let dist = star.baseDist;
+          // compress: stars pull toward a ring at ~30% of screen radius
+          if(compressT > 0){
+            const ringDist = 0.28;
+            dist = star.baseDist + (ringDist - star.baseDist) * Math.pow(compressT,1.4);
+          }
+          const maxR = Math.hypot(cx, cy);
+          const r = dist * maxR * (0.6 + dotPhase * 0.4);
+          const sx = cx + Math.cos(star.angle) * r;
+          const sy = cy + Math.sin(star.angle) * r;
+
+          const alpha = Math.min(1, dotPhase * 1.5) * (1 - warpT * 1.5);
+          if(alpha <= 0) continue;
+
+          ctx.beginPath();
+          ctx.arc(sx, sy, Math.max(0.3, star.baseWidth * 0.5), 0, TAU);
+          ctx.fillStyle = `rgba(${star.r},${star.g},${star.b},${alpha})`;
+          ctx.fill();
+        }
+      }
+
+      // ── PHASE C: Full warp streaks
+      if(warpT > 0){
+        const maxR = Math.hypot(cx, cy);
+
+        // Sort: closer (higher baseDist) drawn last = on top
+        const sorted = [...stars].sort((a,b)=>a.baseDist-b.baseDist);
+
+        for(const star of sorted){
+          // Warp position: stars expand outward from compression ring
+          // The further they are, the faster they fly
+          const expandDist = star.baseDist * maxR * (0.28 + warpPow * star.speed * 1.1);
+
+          // Streak length: grows with warp speed
+          const streakLen = expandDist * (0.015 + warpPow * warpPow * 0.65) * star.speed;
+          const tailDist  = Math.max(0, expandDist - streakLen);
+
+          const headX = cx + Math.cos(star.angle + star.jitter) * Math.min(expandDist, maxR * 1.4);
+          const headY = cy + Math.sin(star.angle + star.jitter) * Math.min(expandDist, maxR * 1.4);
+          const tailX = cx + Math.cos(star.angle + star.jitter) * tailDist;
+          const tailY = cy + Math.sin(star.angle + star.jitter) * tailDist;
+
+          // fade out if head is off screen
+          const offScreen = expandDist > maxR * 1.1;
+          if(offScreen) continue;
+
+          const brightness = (0.3 + star.baseDist * 0.7) * warpPow;
+          const alpha = Math.min(1, brightness);
+          if(alpha < 0.01) continue;
+
+          // gradient: transparent tail → bright head
+          const sg = ctx.createLinearGradient(tailX, tailY, headX, headY);
+          sg.addColorStop(0,   `rgba(${star.r},${star.g},${star.b},0)`);
+          sg.addColorStop(0.5, `rgba(${star.r},${star.g},${star.b},${alpha*0.35})`);
+          sg.addColorStop(1,   `rgba(${star.r},${star.g},${star.b},${alpha})`);
+
+          ctx.beginPath();
+          ctx.moveTo(tailX, tailY);
+          ctx.lineTo(headX, headY);
+          ctx.strokeStyle = sg;
+          ctx.lineWidth = Math.max(0.3, star.baseWidth * (0.4 + warpPow * star.baseDist * 2.5));
+          ctx.lineCap = 'round';
+          ctx.stroke();
+
+          // bright hot tip dot on outer stars
+          if(star.baseDist > 0.4 && warpPow > 0.3){
+            const dotR = Math.max(0.4, star.baseWidth * warpPow * star.baseDist * 4);
+            ctx.beginPath();
+            ctx.arc(headX, headY, dotR, 0, TAU);
+            ctx.fillStyle = `rgba(220,240,255,${alpha})`;
+            ctx.fill();
+          }
+        }
+
+        // ── Hero thick streaks (the big dramatic ones)
+        for(const hs of heroStreaks){
+          const expandDist = hs.baseDist * maxR * (0.28 + warpPow * hs.speed * 1.2);
+          const streakLen  = expandDist * (0.02 + warpPow * warpPow * 0.75) * hs.speed;
+          const tailDist   = Math.max(0, expandDist - streakLen);
+          if(expandDist > maxR * 1.1) continue;
+
+          const hx = cx + Math.cos(hs.angle) * Math.min(expandDist, maxR*1.3);
+          const hy = cy + Math.sin(hs.angle) * Math.min(expandDist, maxR*1.3);
+          const tx = cx + Math.cos(hs.angle) * tailDist;
+          const ty = cy + Math.sin(hs.angle) * tailDist;
+
+          const a = Math.min(1, warpPow * hs.opacity * 0.8);
+          if(a < 0.01) continue;
+
+          const hg = ctx.createLinearGradient(tx,ty,hx,hy);
+          hg.addColorStop(0, `rgba(180,220,255,0)`);
+          hg.addColorStop(0.6,`rgba(200,230,255,${a*0.5})`);
+          hg.addColorStop(1,  `rgba(240,250,255,${a})`);
+
+          ctx.beginPath();
+          ctx.moveTo(tx,ty);
+          ctx.lineTo(hx,hy);
+          ctx.strokeStyle=hg;
+          ctx.lineWidth=Math.max(0.5, hs.width * warpPow);
+          ctx.lineCap='round';
+          ctx.stroke();
+        }
+
+        // ── Core warp tunnel: concentric rings that pulse inward
+        const coreProgress = warpPow;
+        // Tunnel rings — the iconic circular field compression
+        const numRings = 8;
+        for(let ri=0; ri<numRings; ri++){
+          const ringPhase = (ri/numRings + warpPow*0.8) % 1.0;
+          // rings start large and shrink toward centre (inward motion)
+          const ringR = Math.min(cx,cy) * (0.08 + ringPhase * 0.75) * coreProgress;
+          const ringAlpha = (1 - ringPhase) * coreProgress * 0.55;
+          if(ringAlpha < 0.01) continue;
+
+          // glowing ring gradient
+          const rg = ctx.createRadialGradient(cx,cy,ringR*0.88,cx,cy,ringR*1.08);
+          rg.addColorStop(0,   `rgba(80,140,255,0)`);
+          rg.addColorStop(0.4, `rgba(140,200,255,${ringAlpha*0.6})`);
+          rg.addColorStop(0.6, `rgba(180,220,255,${ringAlpha})`);
+          rg.addColorStop(1,   `rgba(80,140,255,0)`);
+          ctx.fillStyle = rg;
+          ctx.beginPath();
+          ctx.arc(cx,cy,ringR*1.08,0,TAU);
+          ctx.fill();
+
+          // hard stroke on top
+          ctx.beginPath();
+          ctx.arc(cx,cy,ringR,0,TAU);
+          ctx.strokeStyle=`rgba(160,210,255,${ringAlpha*0.7})`;
+          ctx.lineWidth=Math.max(0.5, 1.5*coreProgress);
+          ctx.stroke();
+        }
+
+        // ── Central core bloom (white hot tunnel mouth)
+        const coreR = Math.min(cx,cy) * (0.04 + coreProgress * 0.3);
+        const core = ctx.createRadialGradient(cx,cy,0, cx,cy,coreR);
+        core.addColorStop(0,   `rgba(255,255,255,${0.9*coreProgress})`);
+        core.addColorStop(0.15,`rgba(200,230,255,${0.7*coreProgress})`);
+        core.addColorStop(0.4, `rgba(100,160,255,${0.35*coreProgress})`);
+        core.addColorStop(0.7, `rgba(30,60,180,${0.12*coreProgress})`);
+        core.addColorStop(1,   'rgba(0,0,0,0)');
+        ctx.fillStyle=core;
+        ctx.fillRect(0,0,W,H);
+
+        // ── Chromatic aberration rings (red/cyan offset)
+        if(coreProgress > 0.45){
+          const ca = (coreProgress-0.45)/0.55;
+          const caR = Math.min(cx,cy)*coreProgress*0.45;
+          ctx.beginPath();
+          ctx.arc(cx-3,cy,caR,0,TAU);
+          ctx.strokeStyle=`rgba(255,50,50,${ca*0.3})`;
+          ctx.lineWidth=2; ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(cx+3,cy,caR*0.97,0,TAU);
+          ctx.strokeStyle=`rgba(0,255,220,${ca*0.25})`;
+          ctx.lineWidth=1.5; ctx.stroke();
+          // scanline flicker
+          if(Math.random()<0.15){
+            const sy2=rand(0,H);
+            ctx.fillStyle=`rgba(180,220,255,${ca*0.04})`;
+            ctx.fillRect(0,sy2,W,1);
+          }
+        }
+      }
+
+      // ── Vignette (heavier at edges to sell the tunnel focus)
+      const vg = ctx.createRadialGradient(cx,cy,Math.min(cx,cy)*0.25,cx,cy,Math.max(cx,cy)*1.1);
+      vg.addColorStop(0,  'rgba(0,0,0,0)');
+      vg.addColorStop(0.55,'rgba(0,0,5,0.1)');
+      vg.addColorStop(0.8, 'rgba(0,0,8,0.65)');
+      vg.addColorStop(1,   'rgba(0,0,10,0.97)');
+      ctx.fillStyle=vg;
+      ctx.fillRect(0,0,W,H);
+
+      // ── Final jump-to-hyperspace white flash
+      if(finalT > 0){
+        // First burst pure white, then blue-white tunnel narrows to point
+        ctx.fillStyle=`rgba(255,255,255,${Math.pow(finalT,0.7)})`;
+        ctx.fillRect(0,0,W,H);
+      }
+
+      // ── Welcome text materialises in last 28%
+      if(progress > 0.68){
+        const wt = Math.min(1,(progress-0.68)/0.24);
+        welcome.style.opacity = String(wt);
+        if(wt>0.02 && !welcome.classList.contains('show')){
+          welcome.classList.add('show');
+        }
+      }
+
+      if(progress < 1){
+        requestAnimationFrame(drawHyperspace);
+      } else {
+        setTimeout(()=>{ tunnelRunning=false; resolve(); }, 1000);
+      }
+    }
+
+    requestAnimationFrame(drawHyperspace);
+  });
+}
+
+// ─── SEQUENCE ──────────────────────────────────────────────
+
+async function run(){
+  renderLoop();
+  await delay(100);
+
+  // ── PHASE 1: RAIN — cards fly from depth ──────────────────
+  const rainPromises=[];
+  for(let i=0;i<36;i++){
+    rainPromises.push(spawnRainCard(i*rand(30,65)));
+  }
+  await Promise.all(rainPromises);
+  await delay(50);
+
+  // ── PHASE 2: CHAOS SHUFFLE (3 passes) ────────────────────
+  for(let pass=0;pass<3;pass++){
+    const n=14+(pass*5);
+    const pp=[];
+    for(let i=0;i<n;i++) pp.push(spawnShuffleCard(i*20));
+    await Promise.all(pp);
+    await delay(60);
+  }
+  await delay(80);
+
+  // ── PHASE 3: FIBONACCI VORTEX ─────────────────────────────
+  const N=44;
+  const fp=[];
+  for(let i=0;i<N;i++) fp.push(spawnFibCard(i,N,i*16));
+  await Promise.all(fp);
+  cards=[];
+
+  // ── PHASE 4: HERO CARDS EMERGE ───────────────────────────
+  await delay(80);
+  await spawnHeroCards();
+
+  // hold for pulse glow effect (drawn by render loop already)
+  await delay(900);
+
+  // ── PHASE 5: HERO CARDS EXIT INTO SCREEN ─────────────────
+  // They get sucked back deep before the tunnel
+  if(heroL) heroL.phase='exit';
+  if(heroR) heroR.phase='exit';
+  await delay(700);
+
+  // flash
+  $('flash').animate([{opacity:0},{opacity:1},{opacity:0}],
+    {duration:300,easing:'ease',fill:'forwards'});
+
+  // ── PHASE 6: TUNNEL WALK ──────────────────────────────────
+  sceneRunning=false;
+  cancelAnimationFrame(rafId);
+  cards=[];
+  await runTunnel();
+
+  // ── PHASE 7: PORTFOLIO REVEAL ────────────────────────────
+  // fade out canvas + welcome
+  await delay(200);
+  $('welcome').animate([{opacity:1},{opacity:0}],{duration:600,fill:'forwards'});
+  $('intro-canvas').animate([{opacity:1},{opacity:0}],{duration:700,fill:'forwards'});
+  await delay(400);
+
+  const portfolio=$('portfolio');
+  portfolio.classList.add('visible');
+
+  // scroll reveal
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
+  },{threshold:.1});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+  await delay(700);
+  $('intro-canvas').style.display='none';
+  $('welcome').style.display='none';
+}
+
+run();
+</script>
+</body>
+</html>
