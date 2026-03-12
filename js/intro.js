@@ -407,12 +407,12 @@ function spawnRainCard(delay_ms){
     const isBack= Math.random()<0.55;
     const startX = rand(-W*0.5, W*0.5);
     const startY = rand(-H*0.5, H*0.5);
-    const startZ = rand(-1800, -800);
+    const startZ = rand(-800, -300);
     const card = {
       x:startX, y:startY, z:startZ,
-      vx:rand(-2,2), vy:rand(1,4), vz:rand(28,55),
+      vx:rand(-3,3), vy:rand(1,5), vz:rand(80,150),
       rx:rand(-0.4,0.4), ry:rand(-0.5,0.5), rz:rand(-0.6,0.6),
-      vrx:rand(-0.02,0.02), vry:rand(-0.03,0.03), vrz:rand(-0.025,0.025),
+      vrx:rand(-0.03,0.03), vry:rand(-0.04,0.04), vrz:rand(-0.035,0.035),
       suit, rank, isBack, done:false, active:false
     };
 
@@ -438,7 +438,7 @@ function spawnShuffleCard(delay_ms){
       rx:rand(-1,1),ry:rand(-1,1),rz:rand(-1,1),
       vrx:rand(-0.06,0.06),vry:rand(-0.08,0.08),vrz:rand(-0.05,0.05),
       suit,rank,isBack,done:false,active:false,
-      life:0, maxLife:40
+      life:0, maxLife:14
     };
     setTimeout(()=>{
       card.active=true; cards.push(card);
@@ -507,7 +507,7 @@ let orbitCollapseT = 0;
 function spawnHeroCards(){
   return new Promise(resolve=>{
     heroL = {
-      x:-W*0.28, y:0, z:-1800,
+      x:-W*0.28, y:0, z:-800,
       vx:0, vy:0, vz:65,
       rx:0.08, ry:-0.18, rz:-0.03,
       vrx:-0.003, vry:0.005, vrz:0.001,
@@ -517,7 +517,7 @@ function spawnHeroCards(){
       heroScale: HERO_SCALE
     };
     heroR = {
-      x:W*0.28, y:0, z:-2000,
+      x:W*0.28, y:0, z:-900,
       vx:0, vy:0, vz:65,
       rx:-0.06, ry:0.15, rz:0.02,
       vrx:0.003, vry:-0.004, vrz:-0.001,
@@ -537,7 +537,7 @@ function spawnHeroCards(){
 
 function startOrbit(){
   orbitAngle    = Math.PI;
-  orbitSpeed    = 0.008;
+  orbitSpeed    = 0.03;
   orbitRadius   = W * 0.28;
   orbitActive   = true;
   orbitCollapse = false;
@@ -559,7 +559,7 @@ function updateHero(card){
       card.phase = 'hold';
       card.rx = 0; card.ry = 0; card.rz = 0;
     } else {
-      card.vz = Math.max(2, dz*0.08);
+      card.vz = Math.max(3, dz*0.14);
       card.z += card.vz;
       card.rx *= 0.96; card.ry *= 0.96; card.rz *= 0.96;
     }
@@ -575,11 +575,11 @@ function updateOrbit(){
   if(!orbitActive) return;
 
   if(orbitCollapse){
-    orbitCollapseT = Math.min(1, orbitCollapseT + 0.02);
+    orbitCollapseT = Math.min(1, orbitCollapseT + 0.05);
     const ease = orbitCollapseT < 0.5
       ? 2*orbitCollapseT*orbitCollapseT
       : 1 - Math.pow(-2*orbitCollapseT+2,2)/2;
-    orbitSpeed = Math.min(orbitSpeed + 0.006, 0.6);
+    orbitSpeed = Math.min(orbitSpeed + 0.01, 0.6);
     orbitRadius = W * 0.28 * (1 - ease);
     const pullZ = -2500;
     if(heroL) heroL.z += (pullZ - heroL.z) * ease * 0.05;
@@ -592,7 +592,7 @@ function updateOrbit(){
       return;
     }
   } else {
-    orbitSpeed = Math.min(orbitSpeed + 0.0006, 0.18);
+    orbitSpeed = Math.min(orbitSpeed + 0.002, 0.2);
   }
 
   orbitAngle += orbitSpeed;
@@ -651,7 +651,7 @@ function renderLoop(){
     } else {
       card.x+=card.vx; card.y+=card.vy; card.z+=card.vz;
       card.rx+=card.vrx; card.ry+=card.vry; card.rz+=card.vrz;
-      card.vz*=1.015;
+      card.vz*=1.04;
     }
     drawCard3D(card);
   }
@@ -671,7 +671,7 @@ function runTunnel(){
     tunnelRunning = true;
     const welcome = $('welcome');
     const start_ts = performance.now();
-    const DURATION = 3800;
+    const DURATION = 2000;
 
     const NUM_STARS = 600;
     const stars = Array.from({length: NUM_STARS}, () => {
@@ -898,7 +898,7 @@ function runTunnel(){
       if(progress < 1){
         requestAnimationFrame(drawHyperspace);
       } else {
-        setTimeout(()=>{ tunnelRunning=false; resolve(); }, 1000);
+        setTimeout(()=>{ tunnelRunning=false; resolve(); }, 400);
       }
     }
 
@@ -910,25 +910,22 @@ function runTunnel(){
 
 async function run(){
   renderLoop();
-  await delay(100);
+  await delay(30);
 
   // PHASE 1: RAIN
   const rainPromises=[];
-  for(let i=0;i<20;i++){
-    rainPromises.push(spawnRainCard(i*rand(18,35)));
+  for(let i=0;i<10;i++){
+    rainPromises.push(spawnRainCard(i*rand(5,10)));
   }
   await Promise.all(rainPromises);
-  await delay(30);
 
-  // PHASE 2: CHAOS SHUFFLE (2 passes)
-  for(let pass=0;pass<2;pass++){
-    const n=10+(pass*4);
+  // PHASE 2: CHAOS SHUFFLE (1 pass)
+  {
+    const n=8;
     const pp=[];
-    for(let i=0;i<n;i++) pp.push(spawnShuffleCard(i*16));
+    for(let i=0;i<n;i++) pp.push(spawnShuffleCard(i*6));
     await Promise.all(pp);
-    await delay(40);
   }
-  await delay(50);
 
   // PHASE 3: FIBONACCI VORTEX
   const N=30;
@@ -937,21 +934,21 @@ async function run(){
   await Promise.all(fp);
   cards=[];
 
-  // PHASE 4: HERO CARDS EMERGE
-  await delay(80);
+  // PHASE 4: HERO CARDS EMERGE (~400ms enter)
+  await delay(50);
   await spawnHeroCards();
 
-  await delay(700);
+  await delay(250);
 
   // PHASE 5: K + A ORBIT, SPIN UP, COLLAPSE
   startOrbit();
-  await delay(1200);
+  await delay(550);
 
   collapseOrbit();
-  await delay(700);
+  await delay(380);
 
   $('flash').animate([{opacity:0},{opacity:1},{opacity:0}],
-    {duration:300,easing:'ease',fill:'forwards'});
+    {duration:200,easing:'ease',fill:'forwards'});
 
   // PHASE 6: TUNNEL WALK
   sceneRunning=false;

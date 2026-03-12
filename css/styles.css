@@ -182,6 +182,51 @@ nav{
   line-height:1;white-space:nowrap;
 }
 
+/* MONKEY'S SADDLE */
+.saddle-wrap{
+  position:absolute;
+  right:5%;top:50%;
+  transform:translateY(-50%);
+  width:min(45vw,520px);
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 1.2s 1.1s ease;
+}
+#portfolio.visible .saddle-wrap{opacity:1;}
+#saddle-canvas{
+  display:block;
+  width:100%;height:0;
+  padding-bottom:100%;
+}
+.saddle-label{
+  display:flex;flex-direction:column;gap:6px;
+  margin-top:10px;
+  padding:12px 14px;
+  border:1px solid var(--border);
+  background:rgba(3,4,10,.6);
+  backdrop-filter:blur(8px);
+}
+.saddle-eq{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:.82rem;letter-spacing:.04em;
+  color:var(--accent);
+}
+.saddle-name{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-weight:300;
+  font-size:.82rem;line-height:1.5;
+  color:var(--fg-dim);
+}
+@media(max-width:900px){
+  .saddle-wrap{
+    right:0;top:auto;bottom:-5%;
+    transform:none;
+    width:60vw;
+    opacity:0.4;
+  }
+  .saddle-label{display:none;}
+}
+
 /* BUTTONS */
 .btn{
   font-family:'Space Grotesk',sans-serif;

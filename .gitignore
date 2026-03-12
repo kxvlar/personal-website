@@ -16,6 +16,7 @@ clean_frames/
 eyes_only_cleaned/
 frames_no_labels/
 eye_zoom_frames/
+eye_zoom_frames_2/
 
 # Misc
 image.png
